@@ -1,2 +1,6 @@
 [phases.setup]
-aptPkgs = ["chromium", "chromium-driver"]
+aptPkgs = ["chromium", "chromium-driver", "fonts-liberation", "libgbm1"]
+
+[variables]
+PLAYWRIGHT_BROWSERS_PATH = "/usr/bin"
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
