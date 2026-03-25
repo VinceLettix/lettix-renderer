@@ -45,21 +45,33 @@ app.post('/generate', async (req, res) => {
     await page.waitForFunction(() => document.fonts.ready);
     await page.waitForTimeout(1000);
 
-    const result = await page.evaluate(async ({ prenomClean, compte }) => {
+    // Remplir les champs et déclencher la génération
+    await page.evaluate(({ prenomClean, compte }) => {
       const prenomInput = document.getElementById('prenomInput');
       const compteInput = document.getElementById('compteInput');
       if (!prenomInput) throw new Error('prenomInput non trouvé');
       prenomInput.value = prenomClean;
       prenomInput.dispatchEvent(new Event('input'));
       if (compteInput && compte) compteInput.value = compte;
-      await genererDedicace();
-      await new Promise(r => setTimeout(r, 2500));
-      if (!window.generatedSlides || window.generatedSlides.length < 3)
-        throw new Error('Slides non générées');
+    }, { prenomClean, compte: compte || '' });
+
+    // Cliquer sur le bouton générer (plus fiable qu'appeler la fonction directement)
+    await page.evaluate(() => {
+      const btn = document.getElementById('genBtn');
+      if (btn) btn.click();
+      else genererDedicace();
+    });
+
+    // Attendre que les slides soient générées (polling)
+    await page.waitForFunction(() => {
+      return window.generatedSlides && window.generatedSlides.length >= 3;
+    }, { timeout: 15000 });
+
+    const result = await page.evaluate(() => {
       const slides = window.generatedSlides.map(c => c.toDataURL('image/png').split(',')[1]);
       const caption = document.getElementById('captionBox')?.textContent || '';
       return { slides, caption };
-    }, { prenomClean, compte: compte || '' });
+    });
 
     await browser.close();
     res.json({ success: true, prenom: prenomClean, slides: result.slides, caption: result.caption });
