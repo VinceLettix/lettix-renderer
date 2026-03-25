@@ -45,7 +45,7 @@ app.post('/generate', async (req, res) => {
     await page.waitForFunction(() => document.fonts.ready);
     await page.waitForTimeout(1000);
 
-    const result = await page.evaluate(async (prenomClean, compte) => {
+    const result = await page.evaluate(async ({ prenomClean, compte }) => {
       const prenomInput = document.getElementById('prenomInput');
       const compteInput = document.getElementById('compteInput');
       if (!prenomInput) throw new Error('prenomInput non trouvé');
@@ -59,7 +59,7 @@ app.post('/generate', async (req, res) => {
       const slides = window.generatedSlides.map(c => c.toDataURL('image/png').split(',')[1]);
       const caption = document.getElementById('captionBox')?.textContent || '';
       return { slides, caption };
-    }, prenomClean, compte || '');
+    }, { prenomClean, compte: compte || '' });
 
     await browser.close();
     res.json({ success: true, prenom: prenomClean, slides: result.slides, caption: result.caption });
