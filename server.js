@@ -45,27 +45,39 @@ app.post('/generate', async (req, res) => {
     await page.waitForFunction(() => document.fonts.ready);
     await page.waitForTimeout(1000);
 
-    // Remplir les champs et déclencher la génération
+    // Remplir les champs, débloquer le bouton, et appeler directement la fonction
     await page.evaluate(({ prenomClean, compte }) => {
+      // Remplir prénom
       const prenomInput = document.getElementById('prenomInput');
       const compteInput = document.getElementById('compteInput');
       if (!prenomInput) throw new Error('prenomInput non trouvé');
       prenomInput.value = prenomClean;
       prenomInput.dispatchEvent(new Event('input'));
       if (compteInput && compte) compteInput.value = compte;
+      // Débloquer le bouton au cas où
+      const btn = document.getElementById('genBtn');
+      if (btn) btn.disabled = false;
     }, { prenomClean, compte: compte || '' });
 
-    // Cliquer sur le bouton générer (plus fiable qu'appeler la fonction directement)
+    // Appeler genererDedicace et attendre qu'elle se termine
     await page.evaluate(() => {
-      const btn = document.getElementById('genBtn');
-      if (btn) btn.click();
-      else genererDedicace();
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('genererDedicace timeout')), 20000);
+        genererDedicace().then(() => {
+          clearTimeout(timeout);
+          resolve();
+        }).catch(err => {
+          clearTimeout(timeout);
+          reject(err);
+        });
+      });
     });
 
-    // Attendre que les slides soient générées (polling)
-    await page.waitForFunction(() => {
-      return window.generatedSlides && window.generatedSlides.length >= 3;
-    }, { timeout: 15000 });
+    // Attendre que generatedSlides soit peuplé
+    await page.waitForFunction(
+      () => window.generatedSlides && window.generatedSlides.length >= 3,
+      { timeout: 10000 }
+    );
 
     const result = await page.evaluate(() => {
       const slides = window.generatedSlides.map(c => c.toDataURL('image/png').split(',')[1]);
