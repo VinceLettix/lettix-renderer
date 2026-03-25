@@ -8,8 +8,11 @@ app.use(express.json({ limit: '10mb' }));
 
 const GENERATOR_HTML = fs.readFileSync(path.join(__dirname, 'generator.html'), 'utf-8');
 
+// Chromium installé via apt dans le Dockerfile
+const CHROMIUM_PATH = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium';
+
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', service: 'LETTIX Renderer v1' });
+  res.json({ status: 'ok', service: 'LETTIX Renderer v1', chromium: CHROMIUM_PATH });
 });
 
 app.post('/generate', async (req, res) => {
@@ -27,8 +30,14 @@ app.post('/generate', async (req, res) => {
   let browser;
   try {
     browser = await chromium.launch({
+      executablePath: CHROMIUM_PATH,
       chromiumSandbox: false,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu'
+      ]
     });
 
     const page = await browser.newPage();
@@ -62,5 +71,5 @@ app.post('/generate', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`LETTIX Renderer sur port ${PORT}`));
