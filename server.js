@@ -41,8 +41,19 @@ app.post('/generate', async (req, res) => {
     });
 
     const page = await browser.newPage();
-    await page.setContent(GENERATOR_HTML, { waitUntil: 'networkidle', timeout: 30000 });
-    await page.waitForFunction(() => document.fonts.ready);
+
+    // Bloquer les ressources externes (Google Fonts, etc.) pour accélérer
+    await page.route('**/*', (route) => {
+      const url = route.request().url();
+      const blocked = ['fonts.googleapis.com', 'fonts.gstatic.com', 'cdnjs.cloudflare.com'];
+      if (blocked.some(b => url.includes(b))) {
+        route.abort();
+      } else {
+        route.continue();
+      }
+    });
+    await page.setContent(GENERATOR_HTML, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.waitForTimeout(500);
     await page.waitForTimeout(1000);
 
     // Remplir les champs, débloquer le bouton, et appeler directement la fonction
