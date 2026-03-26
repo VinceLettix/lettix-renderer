@@ -92,7 +92,7 @@ app.post('/generate', async (req, res) => {
     console.log('generatedSlides peuplé en', Date.now()-t1, 'ms');
 
     const result = await page.evaluate(() => {
-      const slides = window.generatedSlides.map(c => c.toDataURL('image/png').split(',')[1]);
+      const slides = window.generatedSlides.map(c => c.toDataURL('image/jpeg', 0.92).split(',')[1]);
       const caption = document.getElementById('captionBox')?.textContent || '';
       return { slides, caption };
     });
