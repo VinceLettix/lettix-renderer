@@ -84,10 +84,22 @@ app.post('/generate', async (req, res) => {
 
     console.log('genererDedicace terminé en', Date.now()-t1, 'ms');
 
-    // Attendre que generatedSlides soit peuplé
+    // Diagnostic : voir ce que contient generatedSlides immédiatement après
+    const diagResult = await page.evaluate(() => {
+      return {
+        hasSlides: !!window.generatedSlides,
+        length: window.generatedSlides ? window.generatedSlides.length : 0,
+        exportRowVisible: document.getElementById('exportRow')?.style.display !== 'none',
+        captionVisible: document.getElementById('captionCard')?.style.display !== 'none',
+        genStatus: document.getElementById('genStatus')?.textContent || '',
+      };
+    });
+    console.log('Diagnostic:', JSON.stringify(diagResult));
+
+    // Attendre que generatedSlides soit peuplé avec un polling plus fréquent
     await page.waitForFunction(
       () => window.generatedSlides && window.generatedSlides.length >= 3,
-      { timeout: 10000 }
+      { timeout: 15000, polling: 200 }
     );
     console.log('generatedSlides peuplé en', Date.now()-t1, 'ms');
 
