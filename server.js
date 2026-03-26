@@ -70,25 +70,26 @@ app.post('/generate', async (req, res) => {
       if (btn) btn.disabled = false;
     }, { prenomClean, compte: compte || '' });
 
-    // Appeler genererDedicace et attendre qu'elle se termine
+    // Log timing
+    const t1 = Date.now();
+    console.log('Appel genererDedicace...');
+
     await page.evaluate(() => {
       return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('genererDedicace timeout')), 20000);
-        genererDedicace().then(() => {
-          clearTimeout(timeout);
-          resolve();
-        }).catch(err => {
-          clearTimeout(timeout);
-          reject(err);
-        });
+        const timeout = setTimeout(() => reject(new Error('genererDedicace timeout 20s')), 20000);
+        genererDedicace().then(() => { clearTimeout(timeout); resolve(); })
+                         .catch(err => { clearTimeout(timeout); reject(err); });
       });
     });
+
+    console.log('genererDedicace terminé en', Date.now()-t1, 'ms');
 
     // Attendre que generatedSlides soit peuplé
     await page.waitForFunction(
       () => window.generatedSlides && window.generatedSlides.length >= 3,
       { timeout: 10000 }
     );
+    console.log('generatedSlides peuplé en', Date.now()-t1, 'ms');
 
     const result = await page.evaluate(() => {
       const slides = window.generatedSlides.map(c => c.toDataURL('image/png').split(',')[1]);
