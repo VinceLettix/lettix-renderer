@@ -713,7 +713,7 @@ async function genererDedicace(){
   const s1=await buildSlide(1,prenom,compte,challengeH,challengeV,null,null,theme);
   const s2=await buildSlide(2,prenom,compte,null,null,indice2,null,theme);
   const s3=await buildSlide(3,prenom,compte,null,null,null,soluce,theme);
-  generatedSlides=[s1,s2,s3];currentPrenom=prenom;currentCompte=compte;
+  generatedSlides.length=0;generatedSlides.push(s1,s2,s3);window.generatedSlides=generatedSlides;currentPrenom=prenom;currentCompte=compte;
 
   const grid=document.getElementById('slidesGrid');grid.innerHTML='';
   [s1,s2,s3].forEach((slide,i)=>{
