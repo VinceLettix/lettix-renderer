@@ -4,6 +4,8 @@ FROM node:18-slim
 RUN apt-get update && apt-get install -y \
   chromium \
   fonts-liberation \
+  fonts-noto-color-emoji \
+  fonts-noto-core \
   libglib2.0-0 \
   libnss3 \
   libnspr4 \
