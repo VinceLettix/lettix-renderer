@@ -670,7 +670,7 @@ function buildCaption(prenom,compte){
 // ══════════════════════════════════════════
 // UI
 // ══════════════════════════════════════════
-let generatedSlides=[],currentPrenom='',currentCompte='';
+window.generatedSlides=[];let generatedSlides=window.generatedSlides,currentPrenom='',currentCompte='';
 
 function onPrenomInput(val){
   const clean=stripAccents(val).toUpperCase().replace(/[^A-Z]/g,'');

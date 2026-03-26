@@ -84,22 +84,10 @@ app.post('/generate', async (req, res) => {
 
     console.log('genererDedicace terminé en', Date.now()-t1, 'ms');
 
-    // Diagnostic : voir ce que contient generatedSlides immédiatement après
-    const diagResult = await page.evaluate(() => {
-      return {
-        hasSlides: !!window.generatedSlides,
-        length: window.generatedSlides ? window.generatedSlides.length : 0,
-        exportRowVisible: document.getElementById('exportRow')?.style.display !== 'none',
-        captionVisible: document.getElementById('captionCard')?.style.display !== 'none',
-        genStatus: document.getElementById('genStatus')?.textContent || '',
-      };
-    });
-    console.log('Diagnostic:', JSON.stringify(diagResult));
-
-    // Attendre que generatedSlides soit peuplé avec un polling plus fréquent
+    // Attendre que window.generatedSlides soit peuplé (exposé via le HTML modifié)
     await page.waitForFunction(
       () => window.generatedSlides && window.generatedSlides.length >= 3,
-      { timeout: 15000, polling: 200 }
+      { timeout: 10000, polling: 300 }
     );
     console.log('generatedSlides peuplé en', Date.now()-t1, 'ms');
 
@@ -108,6 +96,7 @@ app.post('/generate', async (req, res) => {
       const caption = document.getElementById('captionBox')?.textContent || '';
       return { slides, caption };
     });
+    console.log('Slides extraits en', Date.now()-t1, 'ms, tailles:', result.slides.map(s=>s.length));
 
     await browser.close();
     res.json({ success: true, prenom: prenomClean, slides: result.slides, caption: result.caption });
